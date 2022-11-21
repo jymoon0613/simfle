@@ -37,7 +37,7 @@ class ResNet50(nn.Module):
         return z, y, x
 
 class SimFLE(nn.Module):
-    def __init__(self, num_group=32, mask_ratio=0.75, mlp_hidden_size=4096, projection_size=256):
+    def __init__(self, args, mlp_hidden_size=4096, projection_size=256):
         super(SimFLE, self).__init__()
         # different model config between ImageNet and CIFAR
 
@@ -45,7 +45,7 @@ class SimFLE(nn.Module):
 
         self.target_network = ResNet50()
 
-        self.facemae = FaceMAE(num_group=num_group, mask_ratio=mask_ratio)
+        self.facemae = FaceMAE(num_group=args.n_groups, mask_ratio=args.mask_ratio)
 
         self.predictor = MLPHead(in_channels=self.online_network.projection.net[-1].out_features,
                             mlp_hidden_size=mlp_hidden_size, projection_size=projection_size)
