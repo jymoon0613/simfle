@@ -33,7 +33,7 @@ parser.add_argument('--n-gpus', default=0, type=int, dest='n_gpus',
                     help='number of gpus to use')
 parser.add_argument('--gpu', default=None, type=int, dest='gpu',
                     help='GPU id to use')
-parser.add_argument('--print-freq', default=10, type=int,
+parser.add_argument('--print-freq', default=10, type=int, dest='print_freq',
                     help='print frequency (default: 10)')
 
 parser.add_argument('--mask-ratio', default=0.75, type=float, dest='mask_ratio',
@@ -59,9 +59,9 @@ def main():
 
     if args.n_gpus != 0:
         if args.gpu == None:
-            torch.nn.DataParallel(model, device_ids=list(range(args.n_gpus)))
+            model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpus))).cuda()
         else:
-            torch.nn.DataParallel(model, device_ids=[args.gpu])
+            model = torch.nn.DataParallel(model, device_ids=[args.n_gpus]).cuda()
     else:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         model.to(device)
@@ -73,12 +73,11 @@ def main():
     parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
 
     init_lr = args.lr * args.batch_size / 256
-    args.init_lr = init_lr
 
     optimizer = torch.optim.SGD(parameters, lr=init_lr, momentum=args.momentum, weight_decay=args.weight_decay)
 
     print("Training the model...")
-    
+
     for epoch in range(args.epochs):
 
         adjust_learning_rate(optimizer, init_lr, epoch, args.epochs)
@@ -114,36 +113,36 @@ def train(train_loader, model, optimizer, epoch, args):
 
     end = time.time()
     for i, (origin, inps) in enumerate(train_loader):
-        
+
         data_time.update(time.time() - end)
 
-        inps[0] = inps[0].cuda(non_blocking = True)
-        inps[1] = inps[1].cuda(non_blocking = True)
-        origin = origin.cuda(non_blocking = True)
+        inps[0] = inps[0].cuda(non_blocking=True)
+        inps[1] = inps[1].cuda(non_blocking=True)
+        origin = origin.cuda(non_blocking=True)
 
         g, loss_r, p1, p2, q1, q2, p1_kd, p2_kd, part_kd, _, _ = model(origin, inps)
         g_ = g * 0
 
-        stable_out = torch.cat((p1_kd.unsqueeze(1), p2_kd.unsqueeze(1), part_kd.unsqueeze(1)), dim = 1).mean(dim = 1)
+        stable_out = torch.cat((p1_kd.unsqueeze(1), p2_kd.unsqueeze(1), part_kd.unsqueeze(1)), dim=1).mean(dim=1)
         stable_out = stable_out.detach()
 
         loss_s = criterions_s(p1, q1) + criterions_s(p2, q2)
 
         loss_d = criterions_d(p1_kd, stable_out) + criterions_d(p2_kd, stable_out) + criterions_d(part_kd, stable_out)
-        
+
         loss_g = criterions_g(g, g_)
 
-        loss = loss_s.mean() + loss_r.mean() + args.alpha * loss_d.mean() + args.beta * loss_g.mean()        
-            
+        loss = loss_s.mean() + loss_r.mean() + args.alpha * loss_d.mean() + args.beta * loss_g.mean()
+
         optimizer.zero_grad()
-        
+
         loss.backward()
         torch.cuda.synchronize()
-        
+
         optimizer.step()
         torch.cuda.synchronize()
-        
-        model._update_target_network_parameters()
+
+        model.module._update_target_network_parameters()
         torch.cuda.synchronize()
 
         losses_s.update(loss_s.mean().item(), inps[0].size(0))
