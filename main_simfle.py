@@ -83,12 +83,18 @@ def main():
         adjust_learning_rate(optimizer, init_lr, epoch, args.epochs)
 
         train(train_loader, model, optimizer, epoch, args)
-
-        save_checkpoint({
-            'epoch': epoch + 1,
-            'state_dict': model.state_dict(),
-            'optimizer' : optimizer.state_dict()},
-            is_best=False, filename='checkpoint_{:04d}.pth.tar'.format(epoch))
+        if model.__class__.__name__ == 'DataParallel':
+            save_checkpoint({
+                'epoch': epoch + 1,
+                'state_dict': model.module.state_dict(),
+                'optimizer' : optimizer.state_dict()},
+                is_best=False, filename='checkpoint_{:04d}.pth.tar'.format(epoch))
+        else:
+            save_checkpoint({
+                'epoch': epoch + 1,
+                'state_dict': model.state_dict(),
+                'optimizer' : optimizer.state_dict()},
+                is_best=False, filename='checkpoint_{:04d}.pth.tar'.format(epoch))
 
 def train(train_loader, model, optimizer, epoch, args):
 
@@ -142,8 +148,13 @@ def train(train_loader, model, optimizer, epoch, args):
         optimizer.step()
         torch.cuda.synchronize()
 
-        model.module._update_target_network_parameters()
-        torch.cuda.synchronize()
+        if model.__class__.__name__ == 'DataParallel':
+            model.module._update_target_network_parameters()
+            torch.cuda.synchronize()
+
+        else:
+            model._update_target_network_parameters()
+            torch.cuda.synchronize()
 
         losses_s.update(loss_s.mean().item(), inps[0].size(0))
         losses_d.update(loss_d.mean().item(), inps[0].size(0))
