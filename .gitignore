@@ -1,2 +1,4 @@
-Tester.ipynb
-.ipynb_checkpoints
+*.ipynb
+*.ipynb_checkpoints
+*.tar
+*.txt
