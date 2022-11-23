@@ -6,7 +6,7 @@ import torch
 from model.loss import DistillationLoss, SimilarityLoss
 from util.util import AverageMeter, ProgressMeter
 
-def train_simfle(train_loader, model, optimizer, epoch, args):
+def train(train_loader, model, optimizer, epoch, args):
 
     criterions_s = SimilarityLoss()
     criterions_d = DistillationLoss(T=4)

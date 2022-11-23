@@ -6,8 +6,9 @@ import torch
 import torch.backends.cudnn as cudnn
 
 from model.model import SimFLE
+from data.dataset import SimFLEDataset
 from util.util import adjust_learning_rate, save_checkpoint
-from train_engine import train_simfle
+from engine_simfle import train
 
 parser = argparse.ArgumentParser(description='Training a Linear Classifier')
 
@@ -103,7 +104,7 @@ def main():
 
         adjust_learning_rate(optimizer, init_lr, epoch, args.max_epoch)
 
-        train_simfle(train_loader, model, optimizer, epoch, args)
+        train(train_loader, model, optimizer, epoch, args)
         if model.__class__.__name__ == 'DataParallel':
             save_checkpoint({
                 'epoch': epoch + 1,
