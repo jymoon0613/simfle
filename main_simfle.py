@@ -50,7 +50,6 @@ parser.add_argument('--beta', default=0.03, type=float, dest='beta',
 
 def main():
     args = parser.parse_args()
-    print(args)
 
     print("Creating model...")
 
