@@ -6,11 +6,10 @@ import torch
 import torch.backends.cudnn as cudnn
 
 from model.model import SimFLE
-from data.dataset import SimFLEDataset
 from util.util import adjust_learning_rate, save_checkpoint
 from train_engine import train_simfle
 
-parser = argparse.ArgumentParser(description='SimFLE Training')
+parser = argparse.ArgumentParser(description='Training a Linear Classifier')
 
 parser.add_argument('--data-path', default=None, type=str, dest='data_path',
                     help='path to dataset (default: None)')
