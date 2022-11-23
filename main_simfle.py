@@ -105,6 +105,7 @@ def main():
         adjust_learning_rate(optimizer, init_lr, epoch, args.max_epoch)
 
         train_simfle(train_loader, model, optimizer, epoch, args)
+        
         if model.__class__.__name__ == 'DataParallel':
             save_checkpoint({
                 'epoch': epoch + 1,
