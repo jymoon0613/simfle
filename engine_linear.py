@@ -74,28 +74,28 @@ def validate(val_loader, model, criterion, args):
         prefix='Test: ')
 
     model.eval()
-
-    end = time.time()
-    for i, (images, target) in enumerate(val_loader):
-
-        images = images.cuda(non_blocking=True)
-        target = target.cuda(non_blocking=True)
-
-        output = model(images)
-        loss = criterion(output, target)
-
-        acc = accuracy(output, target)
-
-        losses.update(loss.item(), images.size(0))
-        accs.update(acc, images.size(0))
-
-        batch_time.update(time.time() - end)
+    with torch.no_grad():
         end = time.time()
+        for i, (images, target) in enumerate(val_loader):
 
-        if i % args.print_freq == 0:
-            progress.display(i)
+            images = images.cuda(non_blocking=True)
+            target = target.cuda(non_blocking=True)
 
-    print(' * Accuracy {acc.avg:.3f}'.format(acc=acc))
+            output = model(images)
+            loss = criterion(output, target)
+
+            acc = accuracy(output, target)
+
+            losses.update(loss.item(), images.size(0))
+            accs.update(acc, images.size(0))
+
+            batch_time.update(time.time() - end)
+            end = time.time()
+
+            if i % args.print_freq == 0:
+                progress.display(i)
+
+        print(' * Accuracy {accs.avg:.3f}'.format(accs=accs))
 
     return accs.avg
 

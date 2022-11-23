@@ -160,8 +160,8 @@ def main():
         train(train_loader, model, criterion, optimizer, epoch, args)
 
         # evaluate on validation set
-        with torch.no_grad():
-            acc = validate(val_loader, model, criterion, args)
+        
+        acc = validate(val_loader, model, criterion, args)
 
         # remember best acc@1 and save checkpoint
         is_best = acc > best_acc
