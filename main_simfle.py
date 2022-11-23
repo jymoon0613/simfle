@@ -22,7 +22,7 @@ parser.add_argument('--start-epoch', default=0, type=int, dest='start_epoch',
 parser.add_argument('--total-epoch', default=100, type=int, dest='total_epoch',
                     help='number of epochs to run (default: 100)')
 parser.add_argument('--max-epoch', default=100, type=int, dest='max_epoch',
-                    help='Maximum number of epochs to run (default: 100)')
+                    help='number of total epochs to run (default: 100)')
 parser.add_argument('--batch-size', default=256, type=int, dest='batch_size',
                     help='batch-size for training (default: 256)')
 parser.add_argument('--lr', default=0.05, type=float, dest='lr',
