@@ -43,8 +43,10 @@ parser.add_argument('--print-freq', default=10, type=int, dest='print_freq',
 parser.add_argument('--evaluate', default=False, dest='evaluate',
                     help='evaluate model on validation set (default: False)')
 
-parser.add_argument('--pretrained', default=None, type=str, dest='pretrained',
-                    help='path to simfle pretrained checkpoint (default: None)')
+parser.add_argument('--pretrained', type=str, dest='pretrained',
+                    help='path to simfle pretrained checkpoint')
+parser.add_argument('--n-classes', default=8, type=int, dest='n_classes',
+                    help='number of classes to classify (default: 8)')
 
 def main():
     args = parser.parse_args()
@@ -54,6 +56,9 @@ def main():
     cudnn.benchmark = True
     gc.collect()
     torch.cuda.empty_cache()
+
+    args.n_groups = 0
+    args.mask_ratio = 0
 
     backbone = SimFLE(args)
 
@@ -68,11 +73,18 @@ def main():
             
             backbone = backbone.online_network.encoder
 
-            model = Classifier(backbone)
+            model = Classifier(backbone, args)
 
-            print("Loaded pretrained model '{}'".format(args.pretrained))
+            print("Loaded SimFle pretrained model '{}'".format(args.pretrained))
         else:
             print("No checkpoint found at '{}'".format(args.pretrained))
+
+    for name, param in model.named_parameters():
+        if name not in ['fc.weight', 'fc.bias']:
+            param.requires_grad = False
+
+    model.fc.weight.data.normal_(mean=0.0, std=0.01)
+    model.fc.bias.data.zero_()
 
     if args.n_gpus != 0:
         if args.gpu == None:
@@ -104,7 +116,7 @@ def main():
             transforms.ToTensor(),
             normalize,
         ])),
-        batch_size=args.batch_size, shuffle=False,
+        batch_size=256, shuffle=False,
         num_workers=args.n_workers, pin_memory=True)
 
     parameters = list(filter(lambda p: p.requires_grad, model.parameters()))
@@ -148,7 +160,8 @@ def main():
         train(train_loader, model, criterion, optimizer, epoch, args)
 
         # evaluate on validation set
-        acc = validate(val_loader, model, criterion, args)
+        with torch.no_grad():
+            acc = validate(val_loader, model, criterion, args)
 
         # remember best acc@1 and save checkpoint
         is_best = acc > best_acc
