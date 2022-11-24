@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.models as models
 import numpy as np
-from einops import rearrange
 from .layer import MLPHead, FaceMAE
 
 @torch.no_grad()

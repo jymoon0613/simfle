@@ -57,10 +57,7 @@ def main():
     gc.collect()
     torch.cuda.empty_cache()
 
-    args.n_groups = 0
-    args.mask_ratio = 0
-
-    backbone = SimFLE(args)
+    backbone = SimFLE()
 
     if args.pretrained is not None:
         if os.path.isfile(args.pretrained):

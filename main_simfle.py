@@ -57,7 +57,7 @@ def main():
     gc.collect()
     torch.cuda.empty_cache()
 
-    model = SimFLE(args)
+    model = SimFLE(n_groups=args.n_groups, mask_ratio=args.mask_ratio)
 
     if args.n_gpus != 0:
         if args.gpu == None:
