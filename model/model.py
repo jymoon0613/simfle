@@ -8,16 +8,12 @@ from .layer import MLPHead, FaceMAE
 
 @torch.no_grad()
 def _update_target_network_parameters(online_network, target_network, m = 0.99):
-    """
-    Momentum update of the key encoder
-    """
     for param_q, param_k in zip(online_network.parameters(), target_network.parameters()):
         param_k.data = param_k.data * m + param_q.data * (1. - m)
 
 class ResNet50(nn.Module):
     def __init__(self):
         super(ResNet50, self).__init__()
-        # different model config between ImageNet and CIFAR
 
         resnet = models.resnet50(pretrained=False)
 
@@ -37,24 +33,23 @@ class ResNet50(nn.Module):
         return z, y, x
 
 class SimFLE(nn.Module):
-    def __init__(self, args, mlp_hidden_size=4096, projection_size=256):
+    def __init__(self, n_groups=32, mask_ratio=0.75):
         super(SimFLE, self).__init__()
-        # different model config between ImageNet and CIFAR
 
         self.online_network = ResNet50()
 
         self.target_network = ResNet50()
 
-        self.facemae = FaceMAE(num_group=args.n_groups, mask_ratio=args.mask_ratio)
+        self.facemae = FaceMAE(img_size=112, in_channels=2048, out_channels=2048, patch_size=16, num_group=n_groups, mask_ratio=mask_ratio)
 
         self.predictor = MLPHead(in_channels=self.online_network.projection.net[-1].out_features,
-                            mlp_hidden_size=mlp_hidden_size, projection_size=projection_size)
+                            mlp_hidden_size=4096, projection_size=256)
 
         self.distil_GFL = MLPHead(in_channels=self.online_network.projection.net[0].in_features,
-                            mlp_hidden_size=mlp_hidden_size, projection_size=projection_size)
+                            mlp_hidden_size=4096, projection_size=256)
 
         self.distil_FFL = MLPHead(in_channels=self.facemae.autoencoder.patch_embed.proj.out_channels,
-                            mlp_hidden_size=mlp_hidden_size, projection_size=projection_size)
+                            mlp_hidden_size=4096, projection_size=256)
 
         self.initializes_target_network()
 
@@ -66,9 +61,6 @@ class SimFLE(nn.Module):
 
     @torch.no_grad()
     def _update_target_network_parameters(self):
-        """
-        Momentum update of the key encoder
-        """
         _update_target_network_parameters(self.online_network, self.target_network, m = 0.99)
 
     def forward(self, origin, inps):

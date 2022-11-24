@@ -26,9 +26,9 @@ class MLPHead(nn.Module):
         return self.net(x)
 
 class ChannelGroupingLayer(nn.Module):
-    def __init__(self, in_channels, out_channels, num_group):
+    def __init__(self, in_channels, out_channels, n_groups):
         super(ChannelGroupingLayer, self).__init__()
-        self.num_group = num_group
+        self.n_groups = n_groups
         self.convolution = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0),
             nn.BatchNorm2d(out_channels),
@@ -57,11 +57,11 @@ class ChannelGroupingLayer(nn.Module):
         co = co.view(1, c*c)
         co = co / b
 
-        gt = torch.ones((self.num_group)).cuda()
+        gt = torch.ones((self.n_groups)).cuda()
         gt = gt.diag()
-        gt = gt.reshape((1, 1, self.num_group, self.num_group))
-        gt = gt.repeat((1, int((c/self.num_group)*(c/self.num_group)), 1, 1))
-        gt = F.pixel_shuffle(gt, upscale_factor=int(c/self.num_group))
+        gt = gt.reshape((1, 1, self.n_groups, self.n_groups))
+        gt = gt.repeat((1, int((c/self.n_groups)*(c/self.n_groups)), 1, 1))
+        gt = F.pixel_shuffle(gt, upscale_factor=int(c/self.n_groups))
         gt = gt.reshape((1, c*c))
 
         loss_single = torch.sum((co-gt)*(co-gt)*0.001, dim=1)
@@ -73,16 +73,16 @@ class ChannelGroupingLayer(nn.Module):
         return matrix_act
 
 class SemanticMaskingLayer(nn.Module):
-    def __init__(self, img_size, num_group, patch_size, mask_ratio):
+    def __init__(self, img_size, in_channels, out_channels, patch_size, n_groups, mask_ratio):
         super(SemanticMaskingLayer, self).__init__()
 
         self.img_size = img_size
-        self.num_group = num_group
+        self.n_groups = n_groups
         self.patch_size = patch_size
         self.mask_ratio = mask_ratio
 
         # ChannelGrouping
-        self.channel_grouping = ChannelGroupingLayer(in_channels=2048, out_channels=2048, num_group=self.num_group)
+        self.channel_grouping = ChannelGroupingLayer(in_channels=in_channels, out_channels=out_channels, n_groups=self.n_groups)
 
     def forward(self, x, feat):
 
@@ -92,9 +92,9 @@ class SemanticMaskingLayer(nn.Module):
         # 2. Channel Aggregation
         b, c, w, h = matrix_act.shape
 
-        bias = torch.arange(c/self.num_group, dtype=torch.int64).reshape(-1, 1)
+        bias = torch.arange(c/self.n_groups, dtype=torch.int64).reshape(-1, 1)
 
-        ind = torch.randint(0, self.num_group, (b,)).reshape(1, -1) * int(c/self.num_group)
+        ind = torch.randint(0, self.n_groups, (b,)).reshape(1, -1) * int(c/self.n_groups)
 
         row_indices = ind + bias
 
@@ -128,14 +128,15 @@ class SemanticMaskingLayer(nn.Module):
         return x_masked, mask, ids_restore, g_loss
 
 class FaceMAE(nn.Module):
-    def __init__(self, img_size=112, num_group=32, patch_size=16, mask_ratio=0.75):
+    def __init__(self, img_size, in_channels, out_channels, patch_size, n_groups, mask_ratio):
         super(FaceMAE, self).__init__()
 
         self.img_size = img_size
         self.patch_size = patch_size
 
         # SemanticMasking
-        self.semantic_masking = SemanticMaskingLayer(img_size=img_size, num_group=num_group, patch_size=patch_size, mask_ratio=mask_ratio)
+        self.semantic_masking = SemanticMaskingLayer(img_size=img_size, in_channels=in_channels, out_channels=out_channels, 
+                                                        patch_size=patch_size, n_groups=n_groups, mask_ratio=mask_ratio)
 
         # Autoencoder
         self.autoencoder = MaskedAutoencoderViT(
@@ -145,21 +146,17 @@ class FaceMAE(nn.Module):
 
     def forward_encoder(self, x, feat):
 
-        # embed patches
         x = self.autoencoder.patch_embed(x)
 
-        # add pos embed w/o cls token
         x = x + self.autoencoder.pos_embed[:, 1:, :]
 
         # Semantic Masking
         x, mask, ids_restore, g_loss = self.semantic_masking(x, feat)
 
-        # append cls token
         cls_token = self.autoencoder.cls_token + self.autoencoder.pos_embed[:, :1, :]
         cls_tokens = cls_token.expand(x.shape[0], -1, -1)
         x = torch.cat((cls_tokens, x), dim=1)
 
-        # apply Transformer blocks
         for blk in self.autoencoder.blocks:
             x = blk(x)
         x = self.autoencoder.norm(x)
@@ -167,37 +164,28 @@ class FaceMAE(nn.Module):
         return x, mask, ids_restore, g_loss
 
     def forward_decoder(self, x, ids_restore):
-        # embed tokens
+
         x = self.autoencoder.decoder_embed(x)
 
-        # append mask tokens to sequence
         mask_tokens = self.autoencoder.mask_token.repeat(x.shape[0], ids_restore.shape[1] + 1 - x.shape[1], 1)
-        x_ = torch.cat([x[:, 1:, :], mask_tokens], dim=1)  # no cls token
-        x_ = torch.gather(x_, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, x.shape[2]))  # unshuffle
-        x = torch.cat([x[:, :1, :], x_], dim=1)  # append cls token
+        x_ = torch.cat([x[:, 1:, :], mask_tokens], dim=1)
+        x_ = torch.gather(x_, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, x.shape[2]))
+        x = torch.cat([x[:, :1, :], x_], dim=1)
 
-        # add pos embed
         x = x + self.autoencoder.decoder_pos_embed
 
-        # apply Transformer blocks
         for blk in self.autoencoder.decoder_blocks:
             x = blk(x)
         x = self.autoencoder.decoder_norm(x)
 
-        # predictor projection
         x = self.autoencoder.decoder_pred(x)
 
-        # remove cls token
         x = x[:, 1:, :]
 
         return x
 
     def forward_loss(self, imgs, pred, mask):
-        """
-        imgs: [N, 3, H, W]
-        pred: [N, L, p*p*3]
-        mask: [N, L], 0 is keep, 1 is remove,
-        """
+
         target = self.autoencoder.patchify(imgs)
         if self.autoencoder.norm_pix_loss:
             mean = target.mean(dim=-1, keepdim=True)
@@ -205,15 +193,16 @@ class FaceMAE(nn.Module):
             target = (target - mean) / (var + 1.e-6)**.5
 
         loss = (pred - target) ** 2
-        loss = loss.mean(dim=-1)  # [N, L], mean loss per patch
+        loss = loss.mean(dim=-1)
 
-        loss = (loss * mask).sum() / mask.sum()  # mean loss on removed patches
+        loss = (loss * mask).sum() / mask.sum()
 
         return loss
 
     def forward(self, imgs, feat):
+        
         latent, mask, ids_restore, g_loss = self.forward_encoder(imgs, feat)
-        pred = self.forward_decoder(latent, ids_restore)  # [N, L, p*p*3]
+        pred = self.forward_decoder(latent, ids_restore)
         gen_loss = self.forward_loss(imgs, pred, mask)
 
         return gen_loss, g_loss, pred, mask, latent
