@@ -10,7 +10,7 @@ from data.dataset import SimFLEDataset
 from util.util import adjust_learning_rate, save_checkpoint
 from engine_simfle import train
 
-parser = argparse.ArgumentParser(description='Training a Linear Classifier')
+parser = argparse.ArgumentParser(description='SimFLE Training')
 
 parser.add_argument('--data-path', default=None, type=str, dest='data_path',
                     help='path to dataset (default: None)')

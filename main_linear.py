@@ -12,7 +12,7 @@ from model.model import SimFLE
 from util.util import save_checkpoint
 from engine_linear import Classifier, train, validate
 
-parser = argparse.ArgumentParser(description='SimFLE Training')
+parser = argparse.ArgumentParser(description='Training a Linear Classifier')
 
 parser.add_argument('--train-data-path', default=None, type=str, dest='train_data_path',
                     help='path to train dataset (default: None)')

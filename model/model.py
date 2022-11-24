@@ -39,7 +39,7 @@ class SimFLE(nn.Module):
 
         self.target_network = ResNet50()
 
-        self.facemae = FaceMAE(img_size=112, in_channels=2048, out_channels=2048, patch_size=16, num_group=n_groups, mask_ratio=mask_ratio)
+        self.facemae = FaceMAE(img_size=112, in_channels=2048, out_channels=2048, patch_size=16, n_groups=n_groups, mask_ratio=mask_ratio)
 
         self.predictor = MLPHead(in_channels=self.online_network.projection.net[-1].out_features,
                             mlp_hidden_size=4096, projection_size=256)
