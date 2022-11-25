@@ -64,7 +64,6 @@ def main():
             print("Loading checkpoint '{}'".format(args.pretrained))
             checkpoint = torch.load(args.pretrained, map_location="cpu")
 
-            # rename moco pre-trained keys
             state_dict = checkpoint['state_dict']
             backbone.load_state_dict(state_dict)
             
@@ -155,12 +154,9 @@ def main():
     for epoch in range(args.start_epoch, args.total_epoch):
 
         train(train_loader, model, criterion, optimizer, epoch, args)
-
-        # evaluate on validation set
         
         acc = validate(val_loader, model, criterion, args)
 
-        # remember best acc@1 and save checkpoint
         is_best = acc > best_acc
         best_acc = max(acc, best_acc)
 

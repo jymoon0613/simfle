@@ -55,8 +55,8 @@ class SimFLE(nn.Module):
     def initializes_target_network(self):
     # init momentum network as encoder net
         for param_q, param_k in zip(self.online_network.parameters(), self.target_network.parameters()):
-            param_k.data.copy_(param_q.data)  # initialize
-            param_k.requires_grad = False  # not update by gradient
+            param_k.data.copy_(param_q.data)
+            param_k.requires_grad = False
 
     @torch.no_grad()
     def _update_target_network_parameters(self):
@@ -68,8 +68,8 @@ class SimFLE(nn.Module):
 
         x1, x2 = inps
 
-        p1, p1_kd, feat1 = self.online_network(x1)
-        p2, p2_kd, feat2 = self.online_network(x2)
+        p1, p1_kd, _ = self.online_network(x1)
+        p2, p2_kd, _ = self.online_network(x2)
 
         p1 = self.predictor(p1)
         p2 = self.predictor(p2)

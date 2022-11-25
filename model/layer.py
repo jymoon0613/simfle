@@ -19,8 +19,7 @@ class MLPHead(nn.Module):
             nn.Linear(in_channels, mlp_hidden_size),
             nn.BatchNorm1d(mlp_hidden_size),
             nn.ReLU(inplace=True),
-            nn.Linear(mlp_hidden_size, projection_size)
-        )
+            nn.Linear(mlp_hidden_size, projection_size))
 
     def forward(self, x):
         return self.net(x)
@@ -32,8 +31,7 @@ class ChannelGroupingLayer(nn.Module):
         self.convolution = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(True)
-        )
+            nn.ReLU(True))
 
         nn.init.constant_(self.convolution[0].weight, 1.0)
         nn.init.constant_(self.convolution[0].bias, 0.1)
@@ -82,7 +80,7 @@ class SemanticMaskingLayer(nn.Module):
         self.mask_ratio = mask_ratio
 
         # ChannelGrouping
-        self.channel_grouping = ChannelGroupingLayer(in_channels=in_channels, out_channels=out_channels, n_groups=self.n_groups)
+        self.channel_grouping = ChannelGroupingLayer(in_channels=in_channels, out_channels=out_channels, n_groups=n_groups)
 
     def forward(self, x, feat):
 
@@ -106,13 +104,13 @@ class SemanticMaskingLayer(nn.Module):
 
         matrix_act_out = F.interpolate(matrix_act_out, (self.img_size, self.img_size), mode='bilinear', align_corners=False)
 
-        patches_att = rearrange(matrix_act_out, 'b c (h s1) (w s2) -> b (h w) (s1 s2 c)', s1 = self.patch_size, s2 = self.patch_size)
+        patches_att = rearrange(matrix_act_out, 'b c (h s1) (w s2) -> b (h w) (s1 s2 c)', s1=self.patch_size, s2=self.patch_size)
 
         len_keep = int(L * (1 - self.mask_ratio))
 
         noise = patches_att.mean(dim = -1)
 
-        ids_shuffle = torch.argsort(noise, dim=1, descending = True)
+        ids_shuffle = torch.argsort(noise, dim=1, descending=True)
         ids_restore = torch.argsort(ids_shuffle, dim=1)
 
         ids_keep = ids_shuffle[:, :len_keep]
@@ -140,7 +138,7 @@ class FaceMAE(nn.Module):
 
         # Autoencoder
         self.autoencoder = MaskedAutoencoderViT(
-            img_size=112, patch_size=16, embed_dim=768, depth=12, num_heads=12,
+            img_size=img_size, patch_size=patch_size, embed_dim=768, depth=12, num_heads=12,
             decoder_embed_dim=512, decoder_depth=8, decoder_num_heads=16,
             mlp_ratio=4, norm_layer=partial(nn.LayerNorm, eps=1e-6), norm_pix_loss=True)
 
