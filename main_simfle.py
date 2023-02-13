@@ -100,6 +100,8 @@ def main():
 
     print("Training the model...")
 
+    os.makedirs('./logs', exist_ok=True)
+
     for epoch in range(args.start_epoch, args.total_epoch):
 
         adjust_learning_rate(optimizer, init_lr, epoch, args.max_epoch)
@@ -111,13 +113,13 @@ def main():
                 'epoch': epoch + 1,
                 'state_dict': model.module.state_dict(),
                 'optimizer' : optimizer.state_dict()},
-                is_best=False, filename='checkpoint_{:03d}.pth.tar'.format(epoch))
+                is_best=False, filename='./logs/checkpoint_{:03d}.pth.tar'.format(epoch))
         else:
             save_checkpoint({
                 'epoch': epoch + 1,
                 'state_dict': model.state_dict(),
                 'optimizer' : optimizer.state_dict()},
-                is_best=False, filename='checkpoint_{:03d}.pth.tar'.format(epoch))
+                is_best=False, filename='./logs/checkpoint_{:03d}.pth.tar'.format(epoch))
 
 if __name__ == '__main__':
     main()
