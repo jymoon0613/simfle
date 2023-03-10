@@ -7,10 +7,11 @@ import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+import torchvision
 
 from model.model import SimFLE
 from util.util import save_checkpoint
-from engine_linear import Classifier, train, validate
+from engine_linear import train, validate
 
 parser = argparse.ArgumentParser(description='Training a Linear Classifier')
 
@@ -57,19 +58,33 @@ def main():
     gc.collect()
     torch.cuda.empty_cache()
 
-    backbone = SimFLE()
-
     if args.pretrained is not None:
         if os.path.isfile(args.pretrained):
             print("Loading checkpoint '{}'".format(args.pretrained))
+
+            arch = 'resnet50'
+            
+            ref = list(torchvision.models.__dict__[arch]().state_dict().keys())
+
             checkpoint = torch.load(args.pretrained, map_location="cpu")
 
             state_dict = checkpoint['state_dict']
-            backbone.load_state_dict(state_dict)
-            
-            backbone = backbone.online_network.encoder
 
-            model = Classifier(backbone, args)
+            cnt = 0
+            for k in list(state_dict.keys()):
+                if k.startswith('online_network.encoder'):
+                    state_dict[ref[cnt]] = state_dict[k]
+                    cnt += 1
+                    
+                del state_dict[k]
+                    
+            del ref
+
+            model = torchvision.models.__dict__[arch]()
+
+            msg = model.load_state_dict(state_dict, strict=False)
+
+            assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
 
             print("Loaded SimFle pretrained model '{}'".format(args.pretrained))
         else:

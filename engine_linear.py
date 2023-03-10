@@ -5,25 +5,6 @@ import torch.nn as nn
 
 from util.util import AverageMeter, ProgressMeter
 
-class Classifier(nn.Module):
-    def __init__(self, backbone, args):
-        super(Classifier, self).__init__()
-        self.backbone = backbone
-        self.avgpool = nn.AdaptiveAvgPool2d(output_size=(1, 1))
-        self.fc = nn.Linear(2048, args.n_classes)
-        
-    def forward(self, x):
-
-        x = self.backbone(x)
-        
-        x = self.avgpool(x)
-        
-        x = x.view(x.size(0), -1)
-
-        x = self.fc(x)
-
-        return x
-
 def train(train_loader, model, criterion, optimizer, epoch, args):
 
     batch_time = AverageMeter('Time', ':6.3f')
