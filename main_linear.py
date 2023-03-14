@@ -82,6 +82,10 @@ def main():
 
             model = torchvision.models.__dict__[arch]()
 
+            fc_input_dim = model.fc.in_features
+
+            model.fc = nn.Linear(fc_input_dim, args.n_classes)
+
             msg = model.load_state_dict(state_dict, strict=False)
 
             assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
