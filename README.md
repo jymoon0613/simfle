@@ -1,7 +1,6 @@
 ## SimFLE: Simple Facial Landmark Encoding for Self-Supervised Facial Expression Recognition in the Wild
 
-This is a PyTorch implementation of the SimFLE paper:  
-[arXiv](https://arxiv.org/abs/2303.07648)
+This is a PyTorch implementation of the SimFLE paper: [arXiv](https://arxiv.org/abs/2303.07648)
 
 ## Abstract
 
