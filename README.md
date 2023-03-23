@@ -1,7 +1,6 @@
 ## SimFLE: Simple Facial Landmark Encoding for Self-Supervised Facial Expression Recognition in the Wild
 
-This is a PyTorch implementation of the SimFLE paper:  
-[arXiv](https://arxiv.org/abs/2303.07648)
+This is a PyTorch implementation of the SimFLE paper: [arXiv](https://arxiv.org/abs/2303.07648)
 
 ## Abstract
 
@@ -16,12 +15,10 @@ One of the key issues in facial expression recognition in the wild (FER-W) is th
 If you use this for research, please cite. Here is an example BibTeX entry:
 
 ```
-@misc{moon2023simfle,
-      title={SimFLE: Simple Facial Landmark Encoding for Self-Supervised Facial Expression Recognition in the Wild}, 
-      author={Jiyong Moon and Seongsik Park},
-      year={2023},
-      eprint={2303.07648},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@article{moon2023simfle,
+  title={SimFLE: Simple Facial Landmark Encoding for Self-Supervised Facial Expression Recognition in the Wild},
+  author={Moon, Jiyong and Park, Seongsik},
+  journal={arXiv preprint arXiv:2303.07648},
+  year={2023}
 }
 ```
