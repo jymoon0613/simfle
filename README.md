@@ -1,5 +1,5 @@
 ## SimFLE for Self-Supervised FER-W
-This is a PyTorch implementation of the paper "SimFLE: Simple Facial Landmark Encoding for Self-Supervised Facial Expression Recognition in the Wild"<br>
+This is a PyTorch implementation of the paper "***SimFLE: Simple Facial Landmark Encoding for Self-Supervised Facial Expression Recognition in the Wild***"<br>
 
 [arXiv](https://arxiv.org/abs/2303.07648)
 
