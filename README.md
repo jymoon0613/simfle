@@ -10,7 +10,7 @@ One of the key issues in facial expression recognition in the wild (FER-W) is th
 
 ## References
 Parts of our codes based on:
-* [facebookresearch/mae]([https://github.com/hbdat/cvpr20_DAZLE](https://github.com/facebookresearch/mae))
+* [facebookresearch/mae](https://github.com/facebookresearch/mae)
 
 ## Citation
 If you use this for research, please cite. Here is an example BibTeX entry:
