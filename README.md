@@ -22,7 +22,7 @@ Please download them from the official websites and put them in the correspondin
 
 Data for SimFLE training should be structured as follows:
 ``` sh
-PATH/TO/DATASET
+|-PATH/TO/DATASET
   |-img1.jpg
   |-img2.jpg
   |-img3.jpg
