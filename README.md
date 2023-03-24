@@ -10,6 +10,49 @@ One of the key issues in facial expression recognition in the wild (FER-W) is th
     <img width="1200" alt="simfle" src="./src/architecture.png">
 </p>
 
+## Data Preparation
+In the paper, we use data from 4 publicly available datasets:
+
++ [AffectNet](http://mohammadmahoor.com/affectnet/)
++ [RAF-DB](http://www.whdeng.cn/raf/model1.html#dataset)
++ [FERPlus](https://github.com/microsoft/FERPlus)
++ [SFEW](https://cs.anu.edu.au/few/AFEW.html)
+
+Please download them from the official websites and put them in the corresponding folders.
+
+Data for SimFLE training should be structured as follows:
+``` sh
+PATH/TO/DATASET
+  |-img1.jpg
+  |-img2.jpg
+  |-img3.jpg
+  |-img4.jpg
+  |-...
+```
+
+Data for linear probing should be structured as follows:
+``` sh
+|-PATH/TO/DATASET
+ |-train
+ | |-class1
+ | | |-img1.jpg
+ | | |-img2.jpg
+ | | |-...
+ | |-class2
+ | | |-img3.jpg
+ | | |-img4.jpg
+ | | |-...
+ |-val
+ | |-class1
+ | | |-img5.jpg
+ | | |-img6.jpg
+ | | |-...
+ | |-class2
+ | | |-img7.jpg
+ | | |-img8.jpg
+ | | |-...
+```
+
 ## References
 Parts of our codes based on:
 * [facebookresearch/mae](https://github.com/facebookresearch/mae)
