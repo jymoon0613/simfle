@@ -53,6 +53,22 @@ Data for linear probing should be structured as follows:
  | | |-...
 ```
 
+## Usage
+An example command line for the SimFLE training:
+```bash
+python main_simfle.py --data-path {PATH/TO/DATASET} --n-gpus {NUM_GPUS}
+```
+
+An example command line for the linear probing:
+```bash
+python main_linear.py --data-path {PATH/TO/DATASET} --dataset {DATASET_NAME} --pretrained {PATH/TO/PRETRAINED_MODEL} --n-gpus {NUM_GPUS}
+```
+
+An example command line only for the test:
+```bash
+python main_linear.py --data-path {PATH/TO/DATASET} --dataset {DATASET_NAME} --pretrained {PATH/TO/TRAINED_MODEL} --n-gpus {NUM_GPUS} --eval
+```
+
 ## References
 Parts of our codes based on:
 * [facebookresearch/mae](https://github.com/facebookresearch/mae)
