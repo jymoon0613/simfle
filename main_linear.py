@@ -52,8 +52,8 @@ def main():
 
     normalize = transforms.Normalize(mean = [0.5795, 0.4522, 0.3957], std = [0.2769, 0.2473, 0.2412])
 
-    train_data_path = os.path.join(args.data_path, 'train_all')
-    test_data_path = os.path.join(args.data_path, 'test')
+    train_data_path = os.path.join(args.data_path, 'train')
+    test_data_path = os.path.join(args.data_path, 'val')
 
     train_dataset = datasets.ImageFolder(
         train_data_path,
