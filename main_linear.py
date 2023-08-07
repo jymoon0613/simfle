@@ -52,8 +52,8 @@ def main():
 
     normalize = transforms.Normalize(mean = [0.5795, 0.4522, 0.3957], std = [0.2769, 0.2473, 0.2412])
 
-    train_data_path = os.path.join(args.data_path, 'train')
-    test_data_path = os.path.join(args.data_path, 'val')
+    train_data_path = os.path.join(args.data_path, 'train_all')
+    test_data_path = os.path.join(args.data_path, 'test')
 
     train_dataset = datasets.ImageFolder(
         train_data_path,
@@ -76,10 +76,30 @@ def main():
         ])),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.n_workers, pin_memory=True)
-    
+
+    print("Creating model...")
+
+    cudnn.benchmark = True
+    gc.collect()
+    torch.cuda.empty_cache()
+
+    if (args.dataset == "affectnet8") or (args.dataset == "ferplus"):
+        n_classes = 8
+    else :
+        n_classes = 7
+        
     if args.eval:
         print("Only evaluation...")
-        model = torch.load(args.pretrained)
+        
+        arch = 'resnet50'
+        model = torchvision.models.__dict__[arch]()
+        fc_input_dim = model.fc.in_features
+        model.fc = nn.Linear(fc_input_dim, n_classes)
+        
+        checkpoint = torch.load(args.pretrained, map_location="cpu")
+        state_dict = checkpoint['state_dict']
+        
+        model.load_state_dict(state_dict)
         if args.n_gpus != 0:
             if args.gpu == None:
                 model = torch.nn.DataParallel(model, device_ids=list(range(args.n_gpus))).cuda()
@@ -93,17 +113,6 @@ def main():
         
         validate(val_loader, model, criterion, args)
         return
-
-    print("Creating model...")
-
-    cudnn.benchmark = True
-    gc.collect()
-    torch.cuda.empty_cache()
-
-    if (args.dataset == "affectnet8") or (args.dataset == "ferplus"):
-        n_classes = 8
-    else :
-        n_classes = 7
 
     if args.pretrained is not None:
         if os.path.isfile(args.pretrained):
