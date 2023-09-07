@@ -27,8 +27,8 @@ parser.add_argument('--start-epoch', default=0, type=int, dest='start_epoch',
                     help='start epoch to run (default: 0)')
 parser.add_argument('--total-epoch', default=100, type=int, dest='total_epoch',
                     help='number of epochs to run (default: 100)')
-parser.add_argument('--batch-size', default=512, type=int, dest='batch_size',
-                    help='batch-size for training (default: 512)')
+parser.add_argument('--batch-size', default=1024, type=int, dest='batch_size',
+                    help='batch-size for training (default: 1024)')
 parser.add_argument('--lr', default=0.5, type=float, dest='lr',
                      help='initial learning rate (default: 0.5)')
 parser.add_argument('--momentum', default=0.9, type=float, dest='momentum',
