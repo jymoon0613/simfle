@@ -40,27 +40,31 @@ class ChannelGroupingLayer(nn.Module):
         self.loss = 0
 
     def forward(self, x):
+        
+        # x = (B, C, W, H)
+        # num. groups = G
+        # num. channels per group = M
 
-        matrix_act = self.convolution(x)
+        matrix_act = self.convolution(x) # (B, C, W, H)
 
-        tmp = matrix_act + 0.001
+        tmp = matrix_act + 0.001 
         b, c, w, h = tmp.shape
-        tmp = tmp.view(int((b*c*w*h)/(w*w)), w*w)
-        tmp = F.normalize(tmp, p=2)
-        tmp = tmp.view(b, c, w*w)
-        tmp = tmp.permute(1, 0, 2)
-        tmp = tmp.reshape(c, b*w*h)
+        tmp = tmp.view(int((b*c*w*h)/(w*w)), w*w) # (B*C, W*H)
+        tmp = F.normalize(tmp, p=2) # L2 normalize (B*C, W*H)
+        tmp = tmp.view(b, c, w*w) # (B, C, W*H)
+        tmp = tmp.permute(1, 0, 2) # (C, B, W*H)
+        tmp = tmp.reshape(c, b*w*h) # (C, B*W*H)
 
-        co = tmp.mm(tmp.transpose(1,0))
-        co = co.view(1, c*c)
+        co = tmp.mm(tmp.transpose(1,0)) # (C, C) cosine similarity matrix
+        co = co.view(1, c*c) # (1, C*C)
         co = co / b
 
-        gt = torch.ones((self.n_groups)).cuda()
-        gt = gt.diag()
-        gt = gt.reshape((1, 1, self.n_groups, self.n_groups))
-        gt = gt.repeat((1, int((c/self.n_groups)*(c/self.n_groups)), 1, 1))
-        gt = F.pixel_shuffle(gt, upscale_factor=int(c/self.n_groups))
-        gt = gt.reshape((1, c*c))
+        gt = torch.ones((self.n_groups)).cuda() # (G,)
+        gt = gt.diag() # (G, G) identity matrix 
+        gt = gt.reshape((1, 1, self.n_groups, self.n_groups)) # (1, 1, G, G)
+        gt = gt.repeat((1, int((c/self.n_groups)*(c/self.n_groups)), 1, 1)) # (1, M*M, G, G)
+        gt = F.pixel_shuffle(gt, upscale_factor=int(c/self.n_groups)) # (1, 1, C, C)
+        gt = gt.reshape((1, c*c)) # (1, C*C)
 
         loss_single = torch.sum((co-gt)*(co-gt)*0.001, dim=1)
         loss = loss_single.repeat(b)
