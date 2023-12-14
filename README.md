@@ -10,6 +10,14 @@ One of the key issues in facial expression recognition in the wild (FER-W) is th
     <img width="1200" alt="simfle" src="./src/architecture.png">
 </p>
 
+## Dependencies
+- cudatoolkit 11.0
+- pytorch 1.7.1
+- numpy 1.23.4
+- pillow 9.2.0
+- timm 0.3.2
+- einops 0.6.0
+
 ## Data Preparation
 In the paper, we use data from 4 publicly available datasets:
 
