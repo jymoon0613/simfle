@@ -86,11 +86,12 @@ Parts of our codes based on:
 If you use this for research, please cite. Here is an example BibTeX entry:
 
 ```
-@article{moon2023simfle,
+@Article{moon2024simfle,
   title={SimFLE: Simple Facial Landmark Encoding for Self-Supervised Facial Expression Recognition in the Wild},
-  author={Moon, Jiyong and Park, Seongsik},
-  journal={arXiv preprint arXiv:2303.07648},
-  year={2023}
+  author={Moon, Jiyong and Jang, Hyeryung and Park, Seongsik},
+  journal={IEEE Transactions on Affective Computing},
+  year={2024},
+  publisher={IEEE}
 }
 ```
 
